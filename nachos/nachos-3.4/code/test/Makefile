@@ -35,7 +35,7 @@ CPP = gcc -E
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-all: halt shell matmult sort
+all: halt shell matmult sort BubbleSort
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.c > strt.s
@@ -65,3 +65,9 @@ matmult.o: matmult.c
 matmult: matmult.o start.o
 	$(LD) $(LDFLAGS) start.o matmult.o -o matmult.coff
 	../bin/coff2noff matmult.coff matmult
+
+BubbleSort.o: BubbleSort.c
+	$(CC) $(CFLAGS) -c BubbleSort.c
+BubbleSort: BubbleSort.o start.o
+	$(LD) $(LDFLAGS) start.o BubbleSort.o -o BubbleSort.coff
+	../bin/coff2noff BubbleSort.coff BubbleSort
