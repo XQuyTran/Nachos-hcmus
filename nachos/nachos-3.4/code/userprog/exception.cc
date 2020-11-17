@@ -383,29 +383,38 @@ void ExceptionHandler(ExceptionType which)
 			delete[] buf;
 			break;
 		}
-		case SC_ReadChar
+		case SC_ReadChar:
 		{
-			// alternative syscall
-			char *buf = new char[MaxFileLength];
-			if (buf == 0) // out of save space
-			{
-				delete[] buf;
+					
+				int maxBytes = 255; // So ki tu toi da
+				char* buffer = new char[255];
+				int totalBytes = gSynchConsole->Read(buffer, maxBytes); // Goi ham Read cua SynchConsole de doc chuoi va tra ve So byte da doc duoc vao totalBytes
+				if(totalBytes > 1) // Neu nguoi dung nhap nhieu hon 1 ki tu
+				{
+					printf("\nChi duoc phep nhap 1 ki tu duy nhat!");
+					DEBUG('a', "\nERROR: Chi duoc phep nhap 1 ki tu duy nhat!");
+					machine->WriteRegister(2, 0); // Tra ve 0					
+				}
+				else if(totalBytes == 0) // Neu nguoi dung khong nhap ki tu
+				{
+					printf("\nKhong co nhap ki tu nao!");
+					DEBUG('a', "\nERROR: Khong co nhao ki tu nao!");
+					machine->WriteRegister(2, 0); // Tra ve 0					
+				}
+				else // Nguoi dung nhap 1 ki tu
+				{
+					char c = buffer[0];
+					machine->WriteRegister(2, c); // Tra ve c					
+				}
+
+				// Giai phong vung nho cho buffer
+				delete buffer;
 				break;
-			}
-
-			int virtAddr = machine->ReadRegister(4);
-			int length = machine->ReadRegister(5);
-
-			int sz = gSynchConsole->Read(buf, length);
-			System2User(virtAddr, sz, buf);
-			delete[] buf;
-			break;
-		}
+		   }
 		case SC_PrintChar:
 		{
-			char ch;
-			ch = (char) machine->ReadRegister(4);
-			gSynchConsole->Write(&ch, 1);
+			char c = (char)machine->ReadRegister(4);
+			gSynchConsole->Write(&c, 1); // In ki tu c
 			break;
 		}
 		case SC_Close:
