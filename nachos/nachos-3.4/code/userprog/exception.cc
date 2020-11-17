@@ -58,23 +58,170 @@ void IncreasePC()
 }
 
 
+
+/*NoException,           // Everything ok!
+		     SyscallException,      // A program executed a system call.
+		     PageFaultException,    // No valid translation found
+		     ReadOnlyException,     // Write attempted to page marked 
+					    // "read-only"
+		     BusErrorException,     // Translation resulted in an 
+					    // invalid physical address
+		     AddressErrorException, // Unaligned reference or one that was beyond the end of the address space
+		     OverflowException,     // Integer overflow in add or sub.
+		     IllegalInstrException, // Unimplemented or reserved instr.
+		     
+		     NumExceptionTypes*/
+
+char* User2System(int virtAddr, int limit){
+	int i;
+	int oneChar;
+	char* kernelBuf=NULL;
+	kernelBuf=new char[limit+1];
+	if(kernelBuf==NULL){
+		return kernelBuf;	
+	}
+	memset(kernelBuf,0,limit+1);
+	for(i=0;i<limit;i++){
+		machine->ReadMem(virtAddr+i,1,&oneChar);
+		kernelBuf[i]=(char)oneChar;
+		if(oneChar==0)
+			break;	
+	}
+	return kernelBuf;
+}
+
+int System2User(int virtAddr,int len, char* buffer)
+{
+	if(len<0)return -1;
+	if(len==0) return len;
+	int i=0;
+	int oneChar=0;
+	do{
+		oneChar=(int)buffer[i];
+		machine->WriteMem(virtAddr+i,1,oneChar);
+		i++;	
+	}while(i<len && oneChar!=0);
+	return i;
+}
+
 void ExceptionHandler(ExceptionType which)
 {
-    int type = machine->ReadRegister(2);
+	int type = machine->ReadRegister(2);
 
-    switch(which) {
+
+    /*if ((which == SyscallException) && (type == SC_Halt)) {
+	DEBUG('a', "Shutdown, initiated by user program.\n");
+   	interrupt->Halt();
+    } else {
+	printf("Unexpected user mode exception %d %d\n", which, type);
+	ASSERT(FALSE);
+    }*/
+	switch (which){
 	case NoException:
+		return;
+	case PageFaultException:{
+		printf("No valid translation found\n");
+		interrupt->Halt();
 		break;
-
-	case SyscallException: 
-		switch (type) {
-			case SC_Halt: 
-				DEBUG('a', "Shutdown, initiated by user program.\n");
-				printf("\n\n Shutdown, initiated by user program.\n");
-   				interrupt->Halt();
-				break;
-
-			case SC_ReadInt: 
+	}
+	case ReadOnlyException:{
+		printf("Write attempted to page marked \"read-only\"\n");
+		interrupt->Halt();
+		break;
+	}
+	case BusErrorException:{
+		printf("Translation resulted in an invalid physical address\n");
+		interrupt->Halt();
+		break;
+	}
+	case AddressErrorException:{
+		printf("Unaligned reference or one that was beyond the end of 			the address space\n"); 	
+		interrupt->Halt();
+		break;
+	}
+	case OverflowException:{
+		printf("Integer overflow in add or sub\n"); 	
+		interrupt->Halt();
+		break;
+	}
+	case IllegalInstrException:{
+		printf("Unimplemented or reserved instr\n"); 	
+		interrupt->Halt();
+		break;
+	}
+	case NumExceptionTypes:{
+		printf("Error\n"); 	
+		interrupt->Halt();
+		break;
+	}
+	case SyscallException:{
+		switch(type) {
+		case SC_Halt: {
+			DEBUG('a', "Shutdown, initiated by user program.\n");
+   			interrupt->Halt();
+			break;
+		}
+		case SC_Exit:
+			break;
+		case SC_Exec:
+			break;
+		case SC_Join:
+			break;
+		case SC_Create:{
+			int virtAddr;
+			char * filename;
+			DEBUG('a',"\n SC_Create call...");
+			DEBUG('a',"\n Reading virtual address of filename");
+			virtAddr=machine->ReadRegister(4);
+			DEBUG('a',"\nReading filename.");
+			filename=User2System(virtAddr,33);	
+			if(filename==NULL){
+				printf("\n Not enough memory in system");
+				DEBUG('a',"\nNot enough memory in system");
+				machine->WriteRegister(2,-1);
+				delete filename;
+				return;
+			}
+			DEBUG('a',"\n Finish reading filename.");
+			if(!fileSystem->Create(filename,0)){
+				printf("\n Error create file '%s',filename");
+				machine->WriteRegister(2,-1);
+				delete filename;
+				return;
+			}
+			machine->WriteRegister(2,0);
+			delete filename;
+			break;
+		}
+		case SC_Open:{
+			int virtAddr =machine->ReadRegister(4);
+			char* filename;
+			filename=User2System(virtAddr,32);
+			if(!fileSystem->Open(filename)){
+				machine->WriteRegister(2,-1);
+				delete filename;
+				return;
+			}
+			machine->WriteRegister(2,0);
+			delete filename;
+			break;
+		}
+		case SC_Read:{
+			
+			break;
+ 		}
+		case SC_Write:{
+			
+			break;
+		}
+		case SC_Close:
+			break;
+		case SC_Fork:
+			break;
+		case SC_Yield:
+			break;
+        
+    case SC_ReadInt: 
 			{
 				int MAX_BUFFER = 255;		// 1 line
 				char* buffer = new char[MAX_BUFFER + 1];
@@ -228,15 +375,14 @@ void ExceptionHandler(ExceptionType which)
 				delete buffer;
 				return;
 			}
-
+    
+		default:{ 
+		printf("Unexpected user mode exception %d %d\n", which, type);
+		ASSERT(FALSE);	
 		}
-			
-
-	default: 
-		printf("\n Unexpected user mode exception %d %d\n", which, type);
-		interrupt->Halt();
-    }
-
+		}
+	}
+	}
 }
 
 
