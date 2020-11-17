@@ -162,11 +162,69 @@ void ExceptionHandler(ExceptionType which)
 			break;
 		}
 		case SC_Exit:
-			break;
+		{
+			int exitStatus = machine->ReadRegister(4);
+
+			if (exitStatus != 0)
+			{
+				IncreasePC();
+				return;
+
+			}
+
+			int res = pTab->ExitUpdate(exitStatus);
+			//machine->WriteRegister(2, res);
+
+			currentThread->FreeSpace();
+			currentThread->Finish();
+			IncreasePC();
+			return;
+		}
 		case SC_Exec:
-			break;
+		{
+			int virtAddr;
+			virtAddr = machine->ReadRegister(4);
+			char* name;
+			name = User2System(virtAddr, MaxFileLength + 1);
+
+			if (name == NULL)
+			{
+				DEBUG('a', "\n Not enough memory in System");
+				printf("\n Not enough memory in System");
+				machine->WriteRegister(2, -1);
+				//IncreasePC();
+				return;
+			}
+			OpenFile *oFile = fileSystem->Open(name);
+			if (oFile == NULL)
+			{
+				printf("\nExec:: Can't open this file.");
+				machine->WriteRegister(2, -1);
+				IncreasePC();
+				return;
+			}
+
+			delete oFile;
+
+			// Return child process id
+			int id = pTab->ExecUpdate(name);
+			machine->WriteRegister(2, id);
+
+			delete[] name;
+			IncreasePC();
+			return;
+		}
 		case SC_Join:
-			break;
+		{
+			// int Join(SpaceId id)
+			int id = machine->ReadRegister(4);
+
+			int res = pTab->JoinUpdate(id);
+
+			machine->WriteRegister(2, res);
+			IncreasePC();
+			return;
+		}
 		case SC_Create:{
 			int virtAddr;
 			char * filename;
@@ -207,15 +265,168 @@ void ExceptionHandler(ExceptionType which)
 			break;
 		}
 		case SC_Read:{
+			int virtAddr = machine->ReadRegister(4);
+			int charcount = machine->ReadRegister(5);
+			int openf_id = machine->ReadRegister(6);
+			int i = fileSystem->index;
 			
+			if (openf_id > i || openf_id < 0 || openf_id == 1) // go wrong <-- if try open `out of domain` fileSystem (10 openfile) 
+			{						 	// or try to read stdout
+				printf("Try to open invalib file");
+				machine->WriteRegister(2, -1);
+				break;
+			}
+
+			if (fileSystem->openfile[openf_id] == NULL)
+			{
+				machine->WriteRegister(2, -1);
+				break;
+			}
+
+			char *buf = User2System(virtAddr, charcount);
+			
+			if (openf_id == 0) // read from stdin
+			{
+				int sz = gSynchConsole->Read(buf, charcount);
+				System2User(virtAddr, sz, buf);
+				machine->WriteRegister(2, sz);
+
+				delete[] buf;
+				break;
+			}
+			
+			int before = fileSystem->openfile[openf_id]->GetCurrentPos();
+			if ((fileSystem->openfile[openf_id]->Read(buf, charcount)) > 0)
+			{
+				// copy data from kernel to user space
+				int after = fileSystem->openfile[openf_id]->GetCurrentPos();
+				System2User(virtAddr, charcount, buf);
+				machine->WriteRegister(2, after - before + 1);	// after & before just used for returning
+			} else {
+				machine->WriteRegister(2, -1);
+			}
+			delete[] buf;
 			break;
  		}
 		case SC_Write:{
+			int virtAddr = machine->ReadRegister(4);
+			int charcount = machine->ReadRegister(5);
+			int openf_id = machine->ReadRegister(6);
+			int i = fileSystem->index;
+
+
+			if (openf_id > i || openf_id < 0 || openf_id == 0) // `out of domain` filesys + try to write to stdin 
+			{
+				machine->WriteRegister(2, -1);
+				break;
+			}
 			
+			if (fileSystem->openfile[openf_id] == NULL)
+			{
+				machine->WriteRegister(2, -1);
+				break;
+			}
+
+			// read-only file	
+			if (fileSystem->openfile[openf_id]->type == 1)
+			{
+				printf("Try to modify read-only file");
+				machine->WriteRegister(2, -1);
+				break;
+			}
+
+			// write to console
+			char *buf = User2System(virtAddr, charcount);
+			if (openf_id == 1)
+			{
+				int i = 0;
+				while (buf[i] != '\0' && buf[i] != '\n')
+				{
+					gSynchConsole->Write(buf + i, 1);
+					i++;
+				}
+				buf[i] = '\n';
+				gSynchConsole->Write(buf + i, 1); // write last character
+
+				machine->WriteRegister(2, i - 1);
+				delete[] buf;
+				break;
+			}
+
+
+			// write into file
+			int before = fileSystem->openfile[openf_id]->GetCurrentPos();
+			if ((fileSystem->openfile[openf_id]->Write(buf, charcount)) != 0)
+			{
+				int after = fileSystem->openfile[openf_id]->GetCurrentPos();
+				System2User(virtAddr, after - before, buf);
+				machine->WriteRegister(2, after - before + 1);
+				delete[] buf;
+				break;
+			break;
+		}
+		case SC_Print:
+		{
+			// alternative syscall
+			// similar to Write(char *buffer, int charcount, OpenFileID id), where id = 1
+			int virtAddr = machine->ReadRegister(4);
+			int i = 0;
+			char *buf = new char[MaxFileLength];
+			buf = User2System(virtAddr, MaxFileLength + 1);
+			while (buf[i] != 0 && buf[i] != '\n')
+			{
+				gSynchConsole->Write(buf + i, 1);
+				i++;
+			}
+
+			gSynchConsole->Write(buf + i, 1);
+			delete[] buf;
+			break;
+		}
+		case SC_ReadChar
+		{
+			// alternative syscall
+			char *buf = new char[MaxFileLength];
+			if (buf == 0) // out of save space
+			{
+				delete[] buf;
+				break;
+			}
+
+			int virtAddr = machine->ReadRegister(4);
+			int length = machine->ReadRegister(5);
+
+			int sz = gSynchConsole->Read(buf, length);
+			System2User(virtAddr, sz, buf);
+			delete[] buf;
+			break;
+		}
+		case SC_PrintChar:
+		{
+			char ch;
+			ch = (char) machine->ReadRegister(4);
+			gSynchConsole->Write(&ch, 1);
 			break;
 		}
 		case SC_Close:
+		{
+			int no = machine->ReadRegister(4);
+			int i = fileSystem->index;
+
+			// opened [i] files, and want to close file No.[no] (no > i) --> go wrong
+			if (i < no)
+			{
+				printf("Close file failed \n");
+				machine->WriteRegister(2, -1);
+				break;
+			}
+
+			fileSystem->openfile[no] == NULL;
+			delete fileSystem->openfile[no];
+			machine->WriteRegister(2, 0);
+			printf("Close file success\n");
 			break;
+		}
 		case SC_Fork:
 			break;
 		case SC_Yield:
