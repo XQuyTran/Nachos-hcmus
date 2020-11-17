@@ -135,7 +135,7 @@ void ExceptionHandler(ExceptionType which)
 		break;
 	}
 	case AddressErrorException:{
-		printf("Unaligned reference or one that was beyond the end of 			the address space\n"); 	
+		printf("Unaligned reference or one that was beyond the end of the address space\n"); 	
 		interrupt->Halt();
 		break;
 	}
@@ -221,90 +221,71 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Yield:
 			break;
         
-    case SC_ReadInt: 
-			{
-				int MAX_BUFFER = 255;		// 1 line
-				char* buffer = new char[MAX_BUFFER + 1];
-				int numberofNum = gSynchConsole->Read(buffer, MAX_BUFFER);	// so chu so cua number
-				int number = 0;		// ket qua
+    		case SC_ReadInt: 
+		{
+			int MAX_BUFFER = 255;		// 1 line
+			char* buffer = new char[MAX_BUFFER + 1];
+			int numberofNum = gSynchConsole->Read(buffer, MAX_BUFFER);	// so chu so cua number
+			int number = 0;		// ket qua
 
-				
-				bool isNegative = false;	// bien kiem tra number la so am hay duong
-				int firstIndex = 0;		
-				if (buffer[0] == '-') {
-					isNegative = true;
-					firstIndex = 1;
-	
-				} else if (buffer[0] == '+') {		// truong hop +223 = 223 van hop le
-					firstIndex = 1;
-				}
 
-				// kiem tra so vua nhap co hop le hay khong
-				for (int i = firstIndex; i < numberofNum; i++) {
-					if (buffer[i] == '.') {			// 234.00000 van hop le
-						for (int j = i + 1; j < numberofNum; j++) {
-							if (buffer[j] != '0') {		// 123.01 khong hop le
-								DEBUG('a', "\nThe integer number is invalid\n");
-								printf("\n\n The integer numbber is invalid\n");
-								machine->WriteRegister(2, 0);
-								IncreasePC();
-								delete buffer;
-								return;	
-							}     
-						} 
-						numberofNum = i;
-						break;  
-					} else if (buffer[i] < '0' || buffer[i] > '9') {	// number co ki tu khong phai la so
+			bool isNegative = false;	// bien kiem tra number la so am hay duong
+			int firstIndex = 0;		
+			if (buffer[0] == '-') {
+				isNegative = true;
+				firstIndex = 1;
+
+			} else if (buffer[0] == '+') {		// truong hop +223 = 223 van hop le
+				firstIndex = 1;
+			}
+
+			// kiem tra so vua nhap co hop le hay khong
+			for (int i = firstIndex; i < numberofNum; i++) {
+				if (buffer[i] == '.') {			// 234.00000 van hop le
+					for (int j = i + 1; j < numberofNum; j++) {
+						if (buffer[j] != '0') {		// 123.01 khong hop le
 							DEBUG('a', "\nThe integer number is invalid\n");
 							printf("\n\n The integer numbber is invalid\n");
 							machine->WriteRegister(2, 0);
 							IncreasePC();
 							delete buffer;
 							return;	
-					} 	
-				}
+						}     
+					} 
+					numberofNum = i;
+					break;  
+				} else if (buffer[i] < '0' || buffer[i] > '9') {	// number co ki tu khong phai la so
+						DEBUG('a', "\nThe integer number is invalid\n");
+						printf("\n\n The integer numbber is invalid\n");
+						machine->WriteRegister(2, 0);
+						IncreasePC();
+						delete buffer;
+						return;	
+				} 	
+			}
 
 
-				// kiem tra so vua nhap co vuot nguong cho phep cua so nguyen
-				if (firstIndex == 1) {		// truong hop co dau	
-					if (numberofNum > 11) {		// Length(MAX_INT) = 10 them dau o buffer{0] nua se la 11
-							DEBUG('a', "\nThe integer number is threshold\n");
-							printf("\n\n The integer numbber is threshold INT_TYPE\n");
-							machine->WriteRegister(2, 0);
-							IncreasePC();
-							delete buffer;
-							return;	
-					} else if (numberofNum == 11) {
-						if (isNegative) {
-							if (strcmp(buffer, "-2147483648") > 0) {
-								DEBUG('a', "\nThe integer number is threshold\n");
-								printf("\n\n The integer numbber is threshold MIN_INT\n");
-								machine->WriteRegister(2, 0);
-								IncreasePC();
-								delete buffer;
-								return;	
-							} 
-						} else {
-							if (strcmp(buffer, "+2147483647") > 0) {
-								DEBUG('a', "\nThe integer number is threshold\n");
-								printf("\n\n The integer numbber is threshold MAX_INT\n");
-								machine->WriteRegister(2, 0);
-								IncreasePC();
-								delete buffer;
-								return;	
-							}
-						}	
-					}
-				} else {	// truong hop k dau
-					if (numberofNum > 10) {		// Length(MAX_INT) = 10
+			// kiem tra so vua nhap co vuot nguong cho phep cua so nguyen
+			if (firstIndex == 1) {		// truong hop co dau	
+				if (numberofNum > 11) {		// Length(MAX_INT) = 10 them dau o buffer{0] nua se la 11
 						DEBUG('a', "\nThe integer number is threshold\n");
 						printf("\n\n The integer numbber is threshold INT_TYPE\n");
 						machine->WriteRegister(2, 0);
 						IncreasePC();
 						delete buffer;
 						return;	
-					} else if (numberofNum == 10) {
-						if (strcmp(buffer, "2147483647") > 0) {
+				} else if (numberofNum == 11) {
+					if (isNegative) {
+						if (strcmp(buffer, "-2147483648") > 0) {
+							DEBUG('a', "\nThe integer number is threshold\n");
+							printf("\n\n The integer numbber is threshold MIN_INT\n");
+							machine->WriteRegister(2, 0);
+							IncreasePC();
+							delete buffer;
+							return;	
+						} 
+					} else {
+						if (strcmp(buffer, "+2147483647") > 0) {
 							DEBUG('a', "\nThe integer number is threshold\n");
 							printf("\n\n The integer numbber is threshold MAX_INT\n");
 							machine->WriteRegister(2, 0);
@@ -312,69 +293,88 @@ void ExceptionHandler(ExceptionType which)
 							delete buffer;
 							return;	
 						}
+					}	
+				}
+			} else {	// truong hop k dau
+				if (numberofNum > 10) {		// Length(MAX_INT) = 10
+					DEBUG('a', "\nThe integer number is threshold\n");
+					printf("\n\n The integer numbber is threshold INT_TYPE\n");
+					machine->WriteRegister(2, 0);
+					IncreasePC();
+					delete buffer;
+					return;	
+				} else if (numberofNum == 10) {
+					if (strcmp(buffer, "2147483647") > 0) {
+						DEBUG('a', "\nThe integer number is threshold\n");
+						printf("\n\n The integer numbber is threshold MAX_INT\n");
+						machine->WriteRegister(2, 0);
+						IncreasePC();
+						delete buffer;
+						return;	
 					}
 				}
-	
-				// chuyen chuoi ki tu ve dang so nguyen khi da hop le
-				for (int i = firstIndex; i < numberofNum; i++) 
-					number = number * 10 + (int)(buffer[i] - 48);	
-				if (isNegative) {
-					number *= -1;
-				}
-				machine->WriteRegister(2, number);
-				IncreasePC();
-				delete buffer;
-				return;	
 			}
 
-			case SC_PrintInt: 
-			{
-				DEBUG('a', "SC_PrintInt called ...\n");
-				int number = machine->ReadRegister(4);
-				// Neu number = 0 thi print
-				if (number == 0) {
-					gSynchConsole->Write("0", 1);
-					IncreasePC();
-					return;
-				}
+			// chuyen chuoi ki tu ve dang so nguyen khi da hop le
+			for (int i = firstIndex; i < numberofNum; i++) 
+				number = number * 10 + (int)(buffer[i] - 48);	
+			if (isNegative) {
+				number *= -1;
+			}
+			machine->WriteRegister(2, number);
+			IncreasePC();
+			delete buffer;
+			return;	
+		}
 
-				bool isNegative = false;	// bien kiem tra number la so am hay duong
-				int numberofNum = 0;		// so chu so cua number
-				int firstIndex = 0;		// vi tri bat dau luu tru chu so trong buffer
-	
-				// kiem tra number am hay duong
-				if (number < 0) {
-					number *= -1;
-					isNegative = true;
-					firstIndex = 1;		// index = 0 de luu ki hieu tru "-"
-				}
-
-				// dem so chu do cua number va luu vao bien numberofNum
-				int nn = number;
-				while (nn) {
-					numberofNum++;
-					nn /= 10;
-				}
-				
-				// chuyen so nguyen ve dang ki tu luu vao vung nho buffer
-				char* buffer = new char[numberofNum + firstIndex + 1];	
-				for (int i = firstIndex + numberofNum - 1; i >= firstIndex; i--) {
-					buffer[i] = (char)((number % 10) + 48);		// chuyen chu so ve ki tu 
-					number /= 10;
-				}
-
-				if (isNegative) {
-					buffer[0] = '-';
-					buffer[numberofNum + 1] = 0;	// = NULL
-				} else {
-					buffer[numberofNum] = 0;	// = NULL
-				}
-
-				gSynchConsole->Write(buffer, numberofNum + firstIndex);
+		case SC_PrintInt: 
+		{
+			DEBUG('a', "SC_PrintInt called ...\n");
+			int number = machine->ReadRegister(4);
+			// Neu number = 0 thi print
+			if (number == 0) {
+				gSynchConsole->Write("0", 1);
 				IncreasePC();
-				delete buffer;
 				return;
 			}
+
+			bool isNegative = false;	// bien kiem tra number la so am hay duong
+			int numberofNum = 0;		// so chu so cua number
+			int firstIndex = 0;		// vi tri bat dau luu tru chu so trong buffer
+
+			// kiem tra number am hay duong
+			if (number < 0) {
+				number *= -1;
+				isNegative = true;
+				firstIndex = 1;		// index = 0 de luu ki hieu tru "-"
+			}
+
+			// dem so chu do cua number va luu vao bien numberofNum
+			int nn = number;
+			while (nn) {
+				numberofNum++;
+				nn /= 10;
+			}
+
+			// chuyen so nguyen ve dang ki tu luu vao vung nho buffer
+			char* buffer = new char[numberofNum + firstIndex + 1];	
+			for (int i = firstIndex + numberofNum - 1; i >= firstIndex; i--) {
+				buffer[i] = (char)((number % 10) + 48);		// chuyen chu so ve ki tu 
+				number /= 10;
+			}
+
+			if (isNegative) {
+				buffer[0] = '-';
+				buffer[numberofNum + 1] = 0;	// = NULL
+			} else {
+				buffer[numberofNum] = 0;	// = NULL
+			}
+
+			gSynchConsole->Write(buffer, numberofNum + firstIndex);
+			IncreasePC();
+			delete buffer;
+			return;
+		}
     
 		default:{ 
 		printf("Unexpected user mode exception %d %d\n", which, type);
