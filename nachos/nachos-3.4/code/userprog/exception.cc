@@ -611,7 +611,7 @@ void ExceptionHandler(ExceptionType which)
 			char* kernelBuf = new char[length + 1];
 			if (kernelBuf == NULL)
 			{
-				//PrintInt(-1);
+				PrintInt(-1);
 				return;
 			}
 			memset(kernelBuf, 0, length + 1);
@@ -621,7 +621,7 @@ void ExceptionHandler(ExceptionType which)
 			//copy vao vung nho user space, tra ve ket qua so ky tu doc duoc
 			int numCharSaved = System2User(userAddr, numCharRead + 1, kernelBuf);
 			DEBUG('a', "\nFinish reading string from console");
-			//PrintInt(numCharRead);
+			PrintInt(numCharSaved);
 
 			//giai phong vung nho da cap phat
 			delete[] kernelBuf;
@@ -642,7 +642,7 @@ void ExceptionHandler(ExceptionType which)
 			while (true)
 			{
 				machine->ReadMem(userAddr + limit, 1, &ch);
-				if (ch > 0 && ch <= 255)
+				if (ch > 0)
 				{
 					limit++;
 				}
@@ -655,7 +655,7 @@ void ExceptionHandler(ExceptionType which)
 			char* kernelBuf = User2System(userAddr, limit);
 			if (kernelBuf == NULL)
 			{
-				//PrintInt(-1);
+				PrintInt(-1);
 				return;
 			}
 
