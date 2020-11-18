@@ -1,16 +1,21 @@
 #include "syscall.h"
 #include "copyright.h"
 #define nameLen 31
+#define idLen 11
 
 int main()
 {
-	char name1[namelen] = "Name 1";
-	char name2[namelen] = "Name 2";
-	char name3[namelen] = "Name 3";
-	char name4[namelen] = "Name 4";
-
+	char name1[namelen] = "Truong Minh Tai";
+	char name2[namelen] = "Tran Xuan Quy";
+	char name3[namelen] = "Truong Quang Luong";
+	char name4[namelen] = "Tran Minh Tri";
 	char* names[4] = {name1, name2, name3, name4};
-	int id[4] = {1,2,3,4};
+	
+	char id1[idLen] = "18120544";
+	char id2[idLen] = "18120231";
+	char id3[idLen] = "18120459";
+	char id4[idLen] = "18120251";
+	char* ids[4] = {id1,id2,id3,id4};
 
 	PrintString("Thong tin thanh vien trong nhom\n");
 	PrintString("Ho ten\tMSSV\n");
@@ -19,7 +24,8 @@ int main()
 	{
 		PrintString(names[i]);
 		PrintString("\t");
-		PrintInt(id[i]);
+		PrintString(id[i]);
+		PrintString("\n");
 	}
 
 	PrintString("Chuong trinh ascii: in ra bang ma ASCII cua cac ky tu doc duoc.\n");
