@@ -22,6 +22,7 @@
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
+#include <string.h>
 #include "system.h"
 #include "syscall.h"
 
@@ -47,7 +48,7 @@
 //	"which" is the kind of exception.  The list of possible exceptions 
 //	are in machine.h.
 //----------------------------------------------------------------------
-#include <string.h>
+
 void IncreasePC() 
 {
 	int counter = machine->ReadRegister(PCReg);
@@ -161,6 +162,7 @@ void ExceptionHandler(ExceptionType which)
    			interrupt->Halt();
 			break;
 		}
+/*
 		case SC_Exit:
 		{
 			int exitStatus = machine->ReadRegister(4);
@@ -225,6 +227,7 @@ void ExceptionHandler(ExceptionType which)
 			IncreasePC();
 			return;
 		}
+*/
 		case SC_Create:{
 			int virtAddr;
 			char * filename;
@@ -264,6 +267,7 @@ void ExceptionHandler(ExceptionType which)
 			delete filename;
 			break;
 		}
+/*
 		case SC_Read:{
 			int virtAddr = machine->ReadRegister(4);
 			int charcount = machine->ReadRegister(5);
@@ -383,6 +387,7 @@ void ExceptionHandler(ExceptionType which)
 			delete[] buf;
 			break;
 		}
+*/
 		case SC_ReadChar:
 		{
 					
@@ -417,6 +422,7 @@ void ExceptionHandler(ExceptionType which)
 			gSynchConsole->Write(&c, 1); // In ki tu c
 			break;
 		}
+/*
 		case SC_Close:
 		{
 			int no = machine->ReadRegister(4);
@@ -436,6 +442,7 @@ void ExceptionHandler(ExceptionType which)
 			printf("Close file success\n");
 			break;
 		}
+*/
 		case SC_Fork:
 			break;
 		case SC_Yield:
@@ -611,7 +618,7 @@ void ExceptionHandler(ExceptionType which)
 			char* kernelBuf = new char[length + 1];
 			if (kernelBuf == NULL)
 			{
-				PrintInt(-1);
+				//PrintInt(-1);
 				return;
 			}
 			memset(kernelBuf, 0, length + 1);
@@ -621,7 +628,7 @@ void ExceptionHandler(ExceptionType which)
 			//copy vao vung nho user space, tra ve ket qua so ky tu doc duoc
 			int numCharSaved = System2User(userAddr, numCharRead + 1, kernelBuf);
 			DEBUG('a', "\nFinish reading string from console");
-			PrintInt(numCharSaved);
+			//PrintInt(numCharSaved);
 
 			//giai phong vung nho da cap phat
 			delete[] kernelBuf;
@@ -655,7 +662,7 @@ void ExceptionHandler(ExceptionType which)
 			char* kernelBuf = User2System(userAddr, limit);
 			if (kernelBuf == NULL)
 			{
-				PrintInt(-1);
+				//PrintInt(-1);
 				return;
 			}
 
@@ -671,10 +678,19 @@ void ExceptionHandler(ExceptionType which)
 		}
     
 		default:{ 
+			printf("Unexpected user mode exception %d %d\n", which, type);
+			//IncreasePC();
+			interrupt->Halt();
+			//ASSERT(FALSE);	
+		}
+		}
+	}
+
+	default:{ 
 		printf("Unexpected user mode exception %d %d\n", which, type);
-		ASSERT(FALSE);	
-		}
-		}
+		//IncreasePC();
+		interrupt->Halt();
+		//ASSERT(FALSE);	
 	}
 	}
 }
