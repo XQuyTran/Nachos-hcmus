@@ -35,7 +35,7 @@ CPP = gcc -E
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-all: halt shell matmult sort BubbleSort string help ascii
+all: halt shell matmult sort ascii BubbleSort createfile help string
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.c > strt.s
@@ -66,17 +66,23 @@ matmult: matmult.o start.o
 	$(LD) $(LDFLAGS) start.o matmult.o -o matmult.coff
 	../bin/coff2noff matmult.coff matmult
 
+ascii.o: ascii.c
+	$(CC) $(CFLAGS) -c ascii.c
+ascii: ascii.o start.o
+	$(LD) $(LDFLAGS) start.o ascii.o -o ascii.coff
+	../bin/coff2noff ascii.coff ascii
+
 BubbleSort.o: BubbleSort.c
 	$(CC) $(CFLAGS) -c BubbleSort.c
 BubbleSort: BubbleSort.o start.o
 	$(LD) $(LDFLAGS) start.o BubbleSort.o -o BubbleSort.coff
 	../bin/coff2noff BubbleSort.coff BubbleSort
 
-string.o: string.c
-	$(CC) $(CFLAGS) -c string.c
-string: string.o start.o
-	$(LD) $(LDFLAGS) start.o string.o -o string.coff
-	../bin/coff2noff string.coff string
+createfile.o: createfile.c
+	$(CC) $(CFLAGS) -c createfile.c
+createfile: createfile.o start.o
+	$(LD) $(LDFLAGS) start.o createfile.o -o createfile.coff
+	../bin/coff2noff createfile.coff createfile
 
 help.o: help.c
 	$(CC) $(CFLAGS) -c help.c
@@ -84,8 +90,8 @@ help: help.o start.o
 	$(LD) $(LDFLAGS) start.o help.o -o help.coff
 	../bin/coff2noff help.coff help
 
-ascii.o: ascii.c
-	$(CC) $(CFLAGS) -c ascii.c
-ascii: ascii.o start.o
-	$(LD) $(LDFLAGS) start.o ascii.o -o ascii.coff
-	../bin/coff2noff ascii.coff ascii
+string.o: string.c
+	$(CC) $(CFLAGS) -c string.c
+string: string.o start.o
+	$(LD) $(LDFLAGS) start.o string.o -o string.coff
+	../bin/coff2noff string.coff string

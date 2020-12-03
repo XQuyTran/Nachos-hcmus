@@ -5,6 +5,10 @@
 
 int main()
 {
+	int nameLen = 31;
+	int idLen = 11;
+	int i;
+
 	char name1[namelen] = "Truong Minh Tai";
 	char name2[namelen] = "Tran Xuan Quy";
 	char name3[namelen] = "Truong Quang Luong";
@@ -20,7 +24,7 @@ int main()
 	PrintString("Thong tin thanh vien trong nhom\n");
 	PrintString("Ho ten\tMSSV\n");
 
-	for (int i = 0; i < 4; i++)
+	for (i = 0; i < 4; i++)
 	{
 		PrintString(names[i]);
 		PrintString("\t");
