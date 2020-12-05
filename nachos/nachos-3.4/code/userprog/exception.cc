@@ -22,6 +22,7 @@
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
+#include <string.h>
 #include "system.h"
 #include "syscall.h"
 
@@ -47,7 +48,7 @@
 //	"which" is the kind of exception.  The list of possible exceptions 
 //	are in machine.h.
 //----------------------------------------------------------------------
-#include <string.h>
+
 void IncreasePC() 
 {
 	int counter = machine->ReadRegister(PCReg);
@@ -161,6 +162,7 @@ void ExceptionHandler(ExceptionType which)
    			interrupt->Halt();
 			break;
 		}
+/*
 		case SC_Exit:
 		{
 			int exitStatus = machine->ReadRegister(4);
@@ -225,6 +227,7 @@ void ExceptionHandler(ExceptionType which)
 			IncreasePC();
 			return;
 		}
+*/
 		case SC_Create:{
 			int virtAddr;
 			char * filename;
@@ -264,6 +267,7 @@ void ExceptionHandler(ExceptionType which)
 			delete filename;
 			break;
 		}
+/*
 		case SC_Read:{
 			int virtAddr = machine->ReadRegister(4);
 			int charcount = machine->ReadRegister(5);
@@ -383,6 +387,7 @@ void ExceptionHandler(ExceptionType which)
 			delete[] buf;
 			break;
 		}
+*/
 		case SC_ReadChar:
 		{
 					
@@ -417,6 +422,7 @@ void ExceptionHandler(ExceptionType which)
 			gSynchConsole->Write(&c, 1); // In ki tu c
 			break;
 		}
+/*
 		case SC_Close:
 		{
 			int no = machine->ReadRegister(4);
@@ -436,6 +442,7 @@ void ExceptionHandler(ExceptionType which)
 			printf("Close file success\n");
 			break;
 		}
+*/
 		case SC_Fork:
 			break;
 		case SC_Yield:
@@ -595,12 +602,95 @@ void ExceptionHandler(ExceptionType which)
 			delete buffer;
 			return;
 		}
+
+		case SC_ReadString:
+		{
+			DEBUG('a', "\nSC_ReadString Call ...");
+			DEBUG('a', "\nReading virtual address of userspace buffer");
+			// lay dia chi vung nho user space va do dai chuoi toi da
+			int userAddr = machine->ReadRegister(4);
+
+			DEBUG('a', "\nReading string length");
+			int length = machine->ReadRegister(5);
+
+			// doc chuoi tu man hinh console
+			DEBUG('a', "\nReading string from console");
+			char* kernelBuf = new char[length + 1];
+			if (kernelBuf == NULL)
+			{
+				//PrintInt(-1);
+				return;
+			}
+			memset(kernelBuf, 0, length + 1);
+			int numCharRead = gSynchConsole->Read(kernelBuf, length);
+
+			// them ki tu ket thuc chuoi
+			//copy vao vung nho user space, tra ve ket qua so ky tu doc duoc
+			int numCharSaved = System2User(userAddr, numCharRead + 1, kernelBuf);
+			DEBUG('a', "\nFinish reading string from console");
+			//PrintInt(numCharSaved);
+
+			//giai phong vung nho da cap phat
+			delete[] kernelBuf;
+			IncreasePC();
+			return;
+		}
+
+		case SC_PrintString:
+		{
+			DEBUG('a', "\nSC_PrintString Call ...");
+			DEBUG('a', "\nReading virtual address of userspace buffer");
+			// lay dia chi luu chuoi ky tu
+			int userAddr = machine->ReadRegister(4);
+	
+			// tim so luong ky tu toi da co the co
+			DEBUG('a', "Finding maximum length of string");
+			int limit = 0, ch = 0;
+			while (true)
+			{
+				machine->ReadMem(userAddr + limit, 1, &ch);
+				if (ch > 0)
+				{
+					limit++;
+				}
+				else
+					break;
+			}
+
+			// copy vung nho qua kernel space
+			DEBUG('a', "\nCopy string to kernel space");
+			char* kernelBuf = User2System(userAddr, limit);
+			if (kernelBuf == NULL)
+			{
+				//PrintInt(-1);
+				return;
+			}
+
+			// ghi chuoi ra man hinh console
+			DEBUG('a', "\nWrite string to console");
+			gSynchConsole->Write(kernelBuf, strlen(kernelBuf));
+
+			DEBUG('a', "\nFinish print string");
+			// giai phong vung nho, tang thanh ghi PC
+			delete[] kernelBuf;
+			IncreasePC();
+			return;
+		}
     
 		default:{ 
+			printf("Unexpected user mode exception %d %d\n", which, type);
+			//IncreasePC();
+			interrupt->Halt();
+			//ASSERT(FALSE);	
+		}
+		}
+	}
+
+	default:{ 
 		printf("Unexpected user mode exception %d %d\n", which, type);
-		ASSERT(FALSE);	
-		}
-		}
+		//IncreasePC();
+		interrupt->Halt();
+		//ASSERT(FALSE);	
 	}
 	}
 }
