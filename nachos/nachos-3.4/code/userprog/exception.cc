@@ -194,7 +194,7 @@ void ExceptionHandler(ExceptionType which)
 				DEBUG('a', "\n Not enough memory in System");
 				printf("\n Not enough memory in System");
 				machine->WriteRegister(2, -1);
-				//IncreasePC();
+				IncreasePC();
 				return;
 			}
 			OpenFile *oFile = fileSystem->Open(name);
@@ -414,12 +414,14 @@ void ExceptionHandler(ExceptionType which)
 
 				// Giai phong vung nho cho buffer
 				delete buffer;
+				IncreasePC();
 				break;
 		   }
 		case SC_PrintChar:
 		{
 			char c = (char)machine->ReadRegister(4);
 			gSynchConsole->Write(&c, 1); // In ki tu c
+			IncreasePC();
 			break;
 		}
 /*
@@ -684,13 +686,6 @@ void ExceptionHandler(ExceptionType which)
 			//ASSERT(FALSE);	
 		}
 		}
-	}
-
-	default:{ 
-		printf("Unexpected user mode exception %d %d\n", which, type);
-		//IncreasePC();
-		interrupt->Halt();
-		//ASSERT(FALSE);	
 	}
 	}
 }
