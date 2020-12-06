@@ -5,17 +5,19 @@ int
 main()
 {
 	int len;
-	char filename[maxlen +1];
+	char filename[maxlen + 1];
 	/*Create a file*/
-	//if (Create("text.txt") == -1)
-	if (Create("text.txt"))
+	if (Create(“text.txt”) == -1)
 	{
-		// xuất thông báo lỗi tạo tập tin
+		print("\nCreate file ~");
+		print(filename);
+		print(" fail.");
 	}
 	else
 	{
-		// xuất thông báo tạo tập tin thành công
+		print("\nCreate file ~");
+		print(filename);
+		print(" success.~");
 	}
-
 	Halt();
 }
