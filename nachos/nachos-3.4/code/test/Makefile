@@ -35,7 +35,7 @@ CPP = gcc -E
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-all: halt shell matmult sort ascii BubbleSort createfile help string
+all: halt shell matmult sort ascii BubbleSort help string ping pong scheduler
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.c > strt.s
@@ -78,12 +78,6 @@ BubbleSort: BubbleSort.o start.o
 	$(LD) $(LDFLAGS) start.o BubbleSort.o -o BubbleSort.coff
 	../bin/coff2noff BubbleSort.coff BubbleSort
 
-createfile.o: createfile.c
-	$(CC) $(CFLAGS) -c createfile.c
-createfile: createfile.o start.o
-	$(LD) $(LDFLAGS) start.o createfile.o -o createfile.coff
-	../bin/coff2noff createfile.coff createfile
-
 help.o: help.c
 	$(CC) $(CFLAGS) -c help.c
 help: help.o start.o
@@ -95,3 +89,21 @@ string.o: string.c
 string: string.o start.o
 	$(LD) $(LDFLAGS) start.o string.o -o string.coff
 	../bin/coff2noff string.coff string
+
+ping.o: ping.c
+	$(CC) $(CFLAGS) -c ping.c
+ping: ping.o start.o
+	$(LD) $(LDFLAGS) start.o ping.o -o ping.coff
+	../bin/coff2noff ping.coff ping
+	
+pong.o: pong.c
+	$(CC) $(CFLAGS) -c pong.c
+pong: ping.o start.o
+	$(LD) $(LDFLAGS) start.o pong.o -o pong.coff
+	../bin/coff2noff pong.coff pong
+	
+scheduler.o: scheduler.c
+	$(CC) $(CFLAGS) -c scheduler.c
+scheduler: scheduler.o start.o
+	$(LD) $(LDFLAGS) start.o scheduler.o -o scheduler.coff
+	../bin/coff2noff scheduler.coff scheduler
