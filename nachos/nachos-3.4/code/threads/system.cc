@@ -188,6 +188,7 @@ Cleanup()
     delete gSynchConsole;
     delete gBmPhysPages;
     delete addrLock;
+    delete pTab;
 #endif
 
 #ifdef FILESYS_NEEDED
