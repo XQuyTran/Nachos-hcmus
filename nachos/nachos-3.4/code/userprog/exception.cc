@@ -26,6 +26,8 @@
 #include "system.h"
 #include "syscall.h"
 
+#define MaxFileLength 255
+
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -162,7 +164,6 @@ void ExceptionHandler(ExceptionType which)
    			interrupt->Halt();
 			break;
 		}
-/*
 		case SC_Exit:
 		{
 			int exitStatus = machine->ReadRegister(4);
@@ -227,7 +228,6 @@ void ExceptionHandler(ExceptionType which)
 			IncreasePC();
 			return;
 		}
-*/
 		case SC_Create:{
 			int virtAddr;
 			char * filename;
@@ -267,7 +267,7 @@ void ExceptionHandler(ExceptionType which)
 			delete filename;
 			break;
 		}
-/*
+
 		case SC_Read:{
 			int virtAddr = machine->ReadRegister(4);
 			int charcount = machine->ReadRegister(5);
@@ -387,7 +387,7 @@ void ExceptionHandler(ExceptionType which)
 			delete[] buf;
 			break;
 		}
-*/
+
 		case SC_ReadChar:
 		{
 					
@@ -424,7 +424,6 @@ void ExceptionHandler(ExceptionType which)
 			IncreasePC();
 			break;
 		}
-/*
 		case SC_Close:
 		{
 			int no = machine->ReadRegister(4);
@@ -444,7 +443,6 @@ void ExceptionHandler(ExceptionType which)
 			printf("Close file success\n");
 			break;
 		}
-*/
 		case SC_Fork:
 			break;
 		case SC_Yield:
@@ -620,7 +618,7 @@ void ExceptionHandler(ExceptionType which)
 			char* kernelBuf = new char[length + 1];
 			if (kernelBuf == NULL)
 			{
-				//PrintInt(-1);
+				PrintInt(-1);
 				return;
 			}
 			memset(kernelBuf, 0, length + 1);
@@ -630,7 +628,7 @@ void ExceptionHandler(ExceptionType which)
 			//copy vao vung nho user space, tra ve ket qua so ky tu doc duoc
 			int numCharSaved = System2User(userAddr, numCharRead + 1, kernelBuf);
 			DEBUG('a', "\nFinish reading string from console");
-			//PrintInt(numCharSaved);
+			PrintInt(numCharSaved);
 
 			//giai phong vung nho da cap phat
 			delete[] kernelBuf;
@@ -664,7 +662,7 @@ void ExceptionHandler(ExceptionType which)
 			char* kernelBuf = User2System(userAddr, limit);
 			if (kernelBuf == NULL)
 			{
-				//PrintInt(-1);
+				PrintInt(-1);
 				return;
 			}
 
