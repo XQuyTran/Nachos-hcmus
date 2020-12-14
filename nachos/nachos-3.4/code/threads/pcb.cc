@@ -113,7 +113,7 @@ int PCB::Exec(char *filename, int pID)
 //*************************************************************************************
 void MyStartProcess(int pID)
 {
-	char *filename= processTab->GetName(pID);
+	char *filename= pTab->GetName(pID);
 	AddrSpace *space= new AddrSpace(filename);
 	if(space == NULL)
 	{
