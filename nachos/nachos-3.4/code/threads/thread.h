@@ -87,6 +87,10 @@ class Thread {
 					// must not be running when delete 
 					// is called
 
+    //bo sung them 2 thuoc tinh processID, exitStatus
+    int processID;
+    int exitStatus;
+
     // basic thread operations
 
     void Fork(VoidFunctionPtr func, int arg); 	// Make thread run (*func)(arg)

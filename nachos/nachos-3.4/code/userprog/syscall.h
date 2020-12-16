@@ -32,6 +32,10 @@
 
 #define SC_ReadInt	11
 #define SC_PrintInt  	12
+#define SC_ReadChar	13
+#define SC_PrintChar	14
+#define SC_ReadString	15
+#define SC_PrintString	16
 
 #ifndef IN_ASM
 
@@ -52,7 +56,7 @@ void Halt();
 /* Address space control operations: Exit, Exec, and Join */
 
 /* This user program is done (status = 0 means exited normally). */
-void Exit(int status);	
+void Exit(int exitStatus);	
 
 /* A unique identifier for an executing user program (address space) */
 typedef int SpaceId;	
@@ -60,12 +64,12 @@ typedef int SpaceId;
 /* Run the executable, stored in the Nachos file "name", and return the 
  * address space identifier
  */
-SpaceId Exec(char *name);
+SpaceId Exec(char *filename);
  
 /* Only return once the the user program "id" has finished.  
  * Return the exit status.
  */
-int Join(SpaceId id); 	
+int Join(SpaceId pid); 	
  
 
 /* File system operations: Create, Open, Read, Write, Close
@@ -129,6 +133,14 @@ void Yield();
 int ReadInt();
 
 void PrintInt(int number);
+
+char ReadChar();
+
+void PrintChar(char character);
+
+void ReadString(char* buffer, int length);
+
+void PrintString(char* buffer);
 
 #endif /* IN_ASM */
 

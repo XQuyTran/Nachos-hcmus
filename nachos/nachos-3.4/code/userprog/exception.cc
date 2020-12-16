@@ -48,6 +48,8 @@
 //	are in machine.h.
 //----------------------------------------------------------------------
 #include <string.h>
+#define MaxFileLength 32
+
 void IncreasePC() 
 {
 	int counter = machine->ReadRegister(PCReg);
@@ -56,21 +58,6 @@ void IncreasePC()
 	machine->WriteRegister(PCReg, counter);
 	machine->WriteRegister(NextPCReg, counter + 4);
 }
-
-
-
-/*NoException,           // Everything ok!
-		     SyscallException,      // A program executed a system call.
-		     PageFaultException,    // No valid translation found
-		     ReadOnlyException,     // Write attempted to page marked 
-					    // "read-only"
-		     BusErrorException,     // Translation resulted in an 
-					    // invalid physical address
-		     AddressErrorException, // Unaligned reference or one that was beyond the end of the address space
-		     OverflowException,     // Integer overflow in add or sub.
-		     IllegalInstrException, // Unimplemented or reserved instr.
-		     
-		     NumExceptionTypes*/
 
 char* User2System(int virtAddr, int limit){
 	int i;
@@ -104,124 +91,114 @@ int System2User(int virtAddr,int len, char* buffer)
 	return i;
 }
 
+
 void ExceptionHandler(ExceptionType which)
 {
-	int type = machine->ReadRegister(2);
+    int type = machine->ReadRegister(2);
 
-
-    /*if ((which == SyscallException) && (type == SC_Halt)) {
-	DEBUG('a', "Shutdown, initiated by user program.\n");
-   	interrupt->Halt();
-    } else {
-	printf("Unexpected user mode exception %d %d\n", which, type);
-	ASSERT(FALSE);
-    }*/
-	switch (which){
+    switch(which) {
 	case NoException:
 		return;
+
 	case PageFaultException:{
 		printf("No valid translation found\n");
 		interrupt->Halt();
 		break;
 	}
+
 	case ReadOnlyException:{
 		printf("Write attempted to page marked \"read-only\"\n");
 		interrupt->Halt();
 		break;
 	}
+
 	case BusErrorException:{
 		printf("Translation resulted in an invalid physical address\n");
 		interrupt->Halt();
 		break;
 	}
+
 	case AddressErrorException:{
-		printf("Unaligned reference or one that was beyond the end of 			the address space\n"); 	
+		printf("Unaligned reference or one that was beyond the end of the address space\n"); 	
 		interrupt->Halt();
 		break;
 	}
+
 	case OverflowException:{
 		printf("Integer overflow in add or sub\n"); 	
 		interrupt->Halt();
 		break;
 	}
+
 	case IllegalInstrException:{
 		printf("Unimplemented or reserved instr\n"); 	
 		interrupt->Halt();
 		break;
 	}
+
 	case NumExceptionTypes:{
 		printf("Error\n"); 	
 		interrupt->Halt();
 		break;
 	}
-	case SyscallException:{
-		switch(type) {
-		case SC_Halt: {
-			DEBUG('a', "Shutdown, initiated by user program.\n");
-   			interrupt->Halt();
-			break;
-		}
-		case SC_Exit:
-			break;
-		case SC_Exec:
-			break;
-		case SC_Join:
-			break;
-		case SC_Create:{
-			int virtAddr;
-			char * filename;
-			DEBUG('a',"\n SC_Create call...");
-			DEBUG('a',"\n Reading virtual address of filename");
-			virtAddr=machine->ReadRegister(4);
-			DEBUG('a',"\nReading filename.");
-			filename=User2System(virtAddr,33);	
-			if(filename==NULL){
-				printf("\n Not enough memory in system");
-				DEBUG('a',"\nNot enough memory in system");
-				machine->WriteRegister(2,-1);
+
+	case SyscallException: 
+		switch (type) {
+			case SC_Halt: 
+				DEBUG('a', "Shutdown, initiated by user program.\n");
+				printf("\n\n Shutdown, initiated by user program.\n");
+   				interrupt->Halt();
+				break;
+
+
+			case SC_Create:{
+				int virtAddr;
+				char * filename;
+				DEBUG('a',"\n SC_Create call...");
+				DEBUG('a',"\n Reading virtual address of filename");
+				virtAddr=machine->ReadRegister(4);
+				DEBUG('a',"\nReading filename.");
+				filename=User2System(virtAddr,33);	
+				if(filename==NULL){
+					printf("\n Not enough memory in system");
+					DEBUG('a',"\nNot enough memory in system");
+					machine->WriteRegister(2,-1);
+					delete filename;
+					return;
+				}
+				DEBUG('a',"\n Finish reading filename.");
+				if(!fileSystem->Create(filename,0)){
+					printf("\n Error create file '%s',filename");
+					machine->WriteRegister(2,-1);
+					delete filename;
+					return;
+				}
+				machine->WriteRegister(2,0);
 				delete filename;
-				return;
+				break;
 			}
-			DEBUG('a',"\n Finish reading filename.");
-			if(!fileSystem->Create(filename,0)){
-				printf("\n Error create file '%s',filename");
-				machine->WriteRegister(2,-1);
+
+			case SC_Open:{
+				int virtAddr =machine->ReadRegister(4);
+				char* filename;
+				filename=User2System(virtAddr,32);
+				if(!fileSystem->Open(filename)){
+					machine->WriteRegister(2,-1);
+					delete filename;
+					return;
+				}
+				machine->WriteRegister(2,0);
 				delete filename;
-				return;
+				break;
 			}
-			machine->WriteRegister(2,0);
-			delete filename;
-			break;
-		}
-		case SC_Open:{
-			int virtAddr =machine->ReadRegister(4);
-			char* filename;
-			filename=User2System(virtAddr,32);
-			if(!fileSystem->Open(filename)){
-				machine->WriteRegister(2,-1);
-				delete filename;
-				return;
-			}
-			machine->WriteRegister(2,0);
-			delete filename;
-			break;
-		}
-		case SC_Read:{
-			
-			break;
- 		}
-		case SC_Write:{
-			
-			break;
-		}
-		case SC_Close:
-			break;
-		case SC_Fork:
-			break;
-		case SC_Yield:
-			break;
+
+			case SC_Fork:
+				break;
+
+			case SC_Yield:
+				break;
         
-    case SC_ReadInt: 
+			case SC_ReadInt: 
 			{
 				int MAX_BUFFER = 255;		// 1 line
 				char* buffer = new char[MAX_BUFFER + 1];
@@ -375,14 +352,171 @@ void ExceptionHandler(ExceptionType which)
 				delete buffer;
 				return;
 			}
-    
-		default:{ 
-		printf("Unexpected user mode exception %d %d\n", which, type);
-		ASSERT(FALSE);	
-		}
-		}
-	}
-	}
+
+			case SC_ReadChar:
+			{
+					
+				int maxBytes = 255; // So ki tu toi da
+				char* buffer = new char[255];
+				int totalBytes = gSynchConsole->Read(buffer, maxBytes); // Goi ham Read cua SynchConsole 
+				if(totalBytes > 1) // Neu nguoi dung nhap nhieu hon 1 ki tu
+				{
+					printf("\nChi duoc phep nhap 1 ki tu duy nhat!");
+					DEBUG('a', "\nERROR: Chi duoc phep nhap 1 ki tu duy nhat!");
+					machine->WriteRegister(2, 0); // Tra ve 0					
+				}
+				else if(totalBytes == 0) // Neu nguoi dung khong nhap ki tu
+				{
+					printf("\nKhong co nhap ki tu nao!");
+					DEBUG('a', "\nERROR: Khong co nhao ki tu nao!");
+					machine->WriteRegister(2, 0); // Tra ve 0					
+				}
+				else // Nguoi dung nhap 1 ki tu
+				{
+					char c = buffer[0];
+					machine->WriteRegister(2, c); // Tra ve c					
+				}
+
+				// Giai phong vung nho cho buffer
+				delete buffer;
+				IncreasePC();
+				break;
+			}
+
+			case SC_PrintChar:
+			{
+				char c = (char)machine->ReadRegister(4);
+				gSynchConsole->Write(&c, 1); // In ki tu c
+				IncreasePC();
+				break;
+			}
+
+			case SC_ReadString:
+			{
+				DEBUG('a', "\nSC_ReadString Call ...");
+				DEBUG('a', "\nReading virtual address of userspace buffer");
+				// lay dia chi vung nho user space va do dai chuoi toi da
+				int userAddr = machine->ReadRegister(4);
+
+				DEBUG('a', "\nReading string length");
+				int length = machine->ReadRegister(5);
+
+				// doc chuoi tu man hinh console
+				DEBUG('a', "\nReading string from console");
+				char* kernelBuf = new char[length + 1];
+				if (kernelBuf == NULL)
+				{
+					printf("\n\nInit kernel Buffer failed!!!");
+					return;
+				}
+				memset(kernelBuf, 0, length + 1);
+				int numCharRead = gSynchConsole->Read(kernelBuf, length);
+
+				// them ki tu ket thuc chuoi
+				//copy vao vung nho user space, tra ve ket qua so ky tu doc duoc
+				int numCharSaved = System2User(userAddr, numCharRead + 1, kernelBuf);
+				DEBUG('a', "\nFinish reading string from console");			
+
+				//giai phong vung nho da cap phat
+				delete[] kernelBuf;
+				IncreasePC();
+				return;
+			}
+
+			case SC_PrintString:
+			{
+				DEBUG('a', "\nSC_PrintString Call ...");
+				DEBUG('a', "\nReading virtual address of userspace buffer");
+				// lay dia chi luu chuoi ky tu
+				int userAddr = machine->ReadRegister(4);
+	
+				// tim so luong ky tu toi da co the co
+				DEBUG('a', "Finding maximum length of string");
+				int limit = 0, ch = 0;
+				while (true)
+				{
+					machine->ReadMem(userAddr + limit, 1, &ch);
+					if (ch > 0)
+					{
+						limit++;
+					}
+					else
+						break;
+				}
+
+				// copy vung nho qua kernel space
+				DEBUG('a', "\nCopy string to kernel space");
+				char* kernelBuf = User2System(userAddr, limit);
+				if (kernelBuf == NULL)
+				{
+				
+					printf("\n\nCopy string to kernel space failed!!");
+					return;
+				}
+
+				// ghi chuoi ra man hinh console
+				DEBUG('a', "\nWrite string to console");
+				gSynchConsole->Write(kernelBuf, strlen(kernelBuf));
+
+				DEBUG('a', "\nFinish print string");
+				// giai phong vung nho, tang thanh ghi PC
+				delete[] kernelBuf;
+				IncreasePC();
+				return;
+			}
+		
+			case SC_Exec:
+			{
+				// SpaceId Exec(char *filename);
+				int virtAddr;
+				virtAddr = machine->ReadRegister(4);			// doc dia chi program tu thanh ghi r4
+				char* name;
+				name = User2System(virtAddr, MaxFileLength + 1); 	// Lay ten chuong trinh, nap vao kernel
+				if(name == NULL)
+				{
+					DEBUG('a', "\n\n Not enough memory in System");
+					printf("\n Not enough memory in System");
+					machine->WriteRegister(2, -1);
+					IncreasePC();
+					return;
+				}
+
+				int id = pTab->ExecUpdate(name); 
+				machine->WriteRegister(2,id);
+
+				delete[] name;	
+				IncreasePC();
+				return;
+			}	
+		
+			case SC_Join:
+			{
+				int pID = machine->ReadRegister(4);	// doc pID cua tien trinh can join tu thanh ghi r4
+				int res = pTab->JoinUpdate(pID);	// join tien trinh vao tien trinh cha
+				machine->WriteRegister(2, res);
+
+				IncreasePC();
+				return;
+			}
+
+			case SC_Exit:
+			{
+				int exitStatus = machine->ReadRegister(4);
+				int res = pTab->ExitUpdate(exitStatus);
+				machine->WriteRegister(2, res);
+
+				IncreasePC();
+				return; 
+			}
+
+			default: 
+				printf("Unexpected user mode exception %d %d\n", which, type);
+				interrupt->Halt();
+			}
+
+		IncreasePC();
+    }
+
 }
 
 
