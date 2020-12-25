@@ -14,8 +14,10 @@ PCB::PCB(int id)
 	numwait= 0;
 	if(id)
 		parentID= currentThread->processID;
-	else
+	else {
 		parentID= 0;
+		this->SetFileName("./test/scheduler");
+	}
 	thread= NULL;
 	JoinStatus= -1;
 
@@ -63,9 +65,14 @@ void PCB::DecNumWait()
 		numwait--;
 }
 
-char* PCB::GetNameThread()
-{
-	return thread->getName();
+void PCB::SetFileName(char* fn)
+{ 
+	strcpy(FileName,fn);
+}
+
+char* PCB::GetFileName() 
+{ 
+	return this->FileName; 
 }
 
 //-------------------------------------------------------------------
@@ -109,7 +116,6 @@ int PCB::Exec(char *filename, int pID)
 	return pID;
 }
 
-
 //*************************************************************************************
 void MyStartProcess(int pID)
 {
@@ -130,3 +136,7 @@ void MyStartProcess(int pID)
 						// the address space exits
 						// by doing the syscall "exit"
 }
+
+
+
+

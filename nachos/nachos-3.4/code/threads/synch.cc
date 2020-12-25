@@ -100,10 +100,73 @@ Semaphore::V()
 // Dummy functions -- so we can compile our later assignments 
 // Note -- without a correct implementation of Condition::Wait(), 
 // the test case in the network assignment won't work!
-Lock::Lock(char* debugName) {}
-Lock::~Lock() {}
-void Lock::Acquire() {}
-void Lock::Release() {}
+Lock::Lock(char* debugName) {
+    name = debugName; // dat ten cho Lock de debug
+    queue = new List; // khoi tao hang doi tien trinh
+    stat = FREE; // khoi tao trang thai mo cho lock
+    ownerThread = NULL; // khoi tao tien trinh quan ly la rong
+}
+
+// Phuong thuc huy doi tuong Lock
+Lock::~Lock() {
+    delete queue; // huy cap phat hang doi tien trinh
+}
+
+// Phuong thuc gan 1 thread lam thread quan ly Lock
+void Lock::Acquire() {
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);	// ngat interrupts
+    
+    // Kiem tra thread hien tai dang quan ly lock
+    // neu dung thi tra ve
+    if (!isHeldByCurrentThread()) {
+    	// Kiem tra Lock dang ranh
+        if (stat == FREE) {
+    		stat = BUSY; // thay doi trang thai sang ban
+    		ownerThread = currentThread; // cap quyen quan ly Lock cho thread hien tai
+    	}
+    	else {
+    		queue->Append((void*)currentThread);// dua thread hien tai vao hang doi
+    		currentThread->Sleep(); // dua thread ve trang thai sleep
+    	}
+    }
+    
+    (void) interrupt->SetLevel(oldLevel); // mo lai cac interrupt
+}
+
+// Phuong thuc tra quyen quan ly Lock
+void Lock::Release() {
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+    
+    // Kiem tra thread hien tai dang quan ly lock
+    // neu khong thi ket thuc
+    if (!isHeldByCurrentThread()) {
+    	DEBUG('t', "The Current Thread does not own the lock !");
+    }
+    // kiem tra co thread trong hang doi
+    else if (!queue->IsEmpty()) {
+    	// lay ra 1 thread tu hang doi
+    	// doi trang thai thread thanh san sang
+    	Thread* thread;
+    	
+    	thread = (Thread*)queue->Remove();
+    	scheduler->ReadyToRun(thread);
+    	
+    	ownerThread = thread; // chuyen quyen quan ly cho thread moi
+    }
+    else {
+    	// doi trang thai Lock thanh ranh
+    	// dat lai thread quan ly la rong
+    	stat = FREE;
+    	ownerThread = NULL;
+    }
+    
+    (void) interrupt->SetLevel(oldLevel); // mo lai interrupt
+}
+
+// Phuong thuc kiem tra tien trinh co quan ly lock hay khong
+bool Lock::isHeldByCurrentThread() {
+    return ownerThread == currentThread;
+}
 
 Condition::Condition(char* debugName) { }
 Condition::~Condition() { }

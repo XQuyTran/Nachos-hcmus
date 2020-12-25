@@ -61,7 +61,9 @@ class Semaphore {
 //
 // In addition, by convention, only the thread that acquired the lock
 // may release it.  As with semaphores, you can't read the lock value
-// (because the value might change immediately after you read it).  
+// (because the value might change immediately after you read it).
+
+enum LockStatus { FREE, BUSY };
 
 class Lock {
   public:
@@ -80,6 +82,9 @@ class Lock {
   private:
     char* name;				// for debugging
     // plus some other stuff you'll need to define
+	LockStatus stat;
+    Thread* ownerThread;
+    List* queue;
 };
 
 // The following class defines a "condition variable".  A condition

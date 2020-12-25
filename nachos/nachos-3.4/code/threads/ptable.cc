@@ -1,6 +1,7 @@
 #include "ptable.h"
 #include "system.h"
 
+
 PTable::PTable(int size)
 {
 	int i = 0;
@@ -35,7 +36,7 @@ int PTable::ExecUpdate(char* filename)
 	OpenFile *executable = fileSystem->Open(filename);
 	if (executable == NULL) 
 	{
-		printf("\nUnable to open file %s\n", filename);
+		printf("\n!!!Unable to open file %s\n", filename);
 		bmsem->V();
 		return -1;
     	}
@@ -62,6 +63,7 @@ int PTable::ExecUpdate(char* filename)
 ////////////////////////////////////////////////////////////
 
 	pcb[ID]= new PCB(ID);
+	pcb[ID]->SetFileName(filename);
 	bm->Mark(ID);
 	int pID= pcb[ID]->Exec(filename,ID);
 
@@ -103,7 +105,6 @@ int PTable::ExitUpdate(int ec)
 
 int PTable::JoinUpdate(int pID)
 {
-	
 	if(pID <= 0 || pID > 9)
 	{
 		printf("\nLoi: Khong ton tai process: id = %d\n",pID);
@@ -167,5 +168,5 @@ bool PTable::IsExist(int pID)
 char* PTable::GetName(int pID)
 {
 	if(pID>=0 && pID<10 && bm->Test(pID))
-		return pcb[pID]->GetNameThread();
+		return pcb[pID]->GetFileName();
 }

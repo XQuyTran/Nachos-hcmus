@@ -14,7 +14,8 @@ private:
 	Thread		*thread;
 	int		pid;
 	int		numwait;	//so tien trinh da join
-
+	// bo sung them ten tien trinh 
+	char     	FileName[32];
 public:
 	int 		parentID;	//ID cua tien trinh cha
 	int		JoinStatus;	//Trang thai co Join voi tien trinh nao khong? neu co thi gia tri chinh la ID cua tien trinh ma no Join
@@ -32,10 +33,14 @@ public:
 	void DecNumWait();
 	void SetExitCode(int ec);
 	int GetExitCode();
-	char* GetNameThread();
+	void SetFileName(char* fn);
+	char* GetFileName();
+
 };
 
 //*********************************************************************************************************************
 void MyStartProcess(int pID);
+
+
 
 #endif

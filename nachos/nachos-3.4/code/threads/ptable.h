@@ -4,6 +4,7 @@
 #include "bitmap.h"
 #include "pcb.h"
 #include "synch.h"
+#include "filesys.h"
 
 #define MAXPROCESS 10
 

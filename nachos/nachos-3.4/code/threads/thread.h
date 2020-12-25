@@ -87,6 +87,10 @@ class Thread {
 					// must not be running when delete 
 					// is called
 
+    //bo sung them 2 thuoc tinh processID, exitStatus
+    int processID;
+    int exitStatus;
+
     // basic thread operations
 
     void Fork(VoidFunctionPtr func, int arg); 	// Make thread run (*func)(arg)
@@ -101,7 +105,6 @@ class Thread {
     void setStatus(ThreadStatus st) { status = st; }
     char* getName() { return (name); }
     void Print() { printf("%s, ", name); }
-    int processID;
 
   private:
     // some of the private data for this class is listed above

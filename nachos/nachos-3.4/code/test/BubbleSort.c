@@ -37,7 +37,8 @@ void printArr(int arr[], int n) {
 	int i;
 	for (i = 0; i < n; i++) {
 		PrintInt(arr[i]);
-		PrintString(", ");
+		if (i != n - 1)
+			PrintString(", ");
 	}
 }
 
@@ -59,13 +60,12 @@ int main()
 		arr[i] = ReadInt();	// Neu nhap khong hop le thi a[i] = 0
 	}
 	
-	PrintString("Cac phan tu truoc khi duoc sap xep la: ");
+	PrintString("Cac phan tu mang la: ");
 	printArr(arr, n);
-	PrintChar('\n');
 
 	do {
-		PrintString("Ban muon sap xep tang dan hay giam dan(tang(1)/giam(2)???\n");
-		PrintString("Ban chon[1/2]: ");
+		PrintString("\n\nBan muon sap xep tang dan hay giam dan(tang(1)/giam(2))???");
+		PrintString("\nBan chon[1/2]: ");
 		choice = ReadInt();
 	} while (choice != 1 && choice != 2);
 

@@ -38,15 +38,10 @@ Thread::Thread(char* threadName)
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
-    
-    int i;
-    for (i = 0; i < 10; i++) {
-    	if (!pTab->IsExist(i)) {
-    		processID = i;
-    		break;
-    	}
-    }
-    
+    // khoi tao cho 2 bien moi them vao
+    processID = 0;
+    exitStatus = 0;
+
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -71,10 +66,6 @@ Thread::~Thread()
     ASSERT(this != currentThread);
     if (stack != NULL)
 	DeallocBoundedArray((char *) stack, StackSize * sizeof(int));
-	
-    if (space != NULL) {
-    	delete space;
-    }
 }
 
 //----------------------------------------------------------------------
